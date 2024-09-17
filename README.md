@@ -103,4 +103,4 @@ conn on-prem-to-azure
 
 With this complete, we are good to give it a test. We can start the VPN with the command "sudo ipsec start". To retrieve the connection status, run "sudo ipsec status" or "sudo ipsec statusall" for more details. 
 
-Once connected, we can run a test by attempting to ping a device in Azure with it's private IP address. If everything is networked correctly, we will get ping responses back from the devices in Azure that are connected to the virtual gateway (NOTE: Windows server has ICMP blocked by default in the firewall.). 
+Once connected, we can run a test by attempting to ping a device in Azure with it's private IP address. If everything is networked correctly, we will get ping responses back from the devices in Azure (NOTE: Windows server has ICMP blocked by default in the firewall. If you try to ping a Windows Server and are not receiving response, check this.). 
