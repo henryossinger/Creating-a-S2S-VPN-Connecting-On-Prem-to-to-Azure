@@ -32,29 +32,34 @@ When creating a VNET you have the option to create a gatewaySubnet during the pr
 
 Once that is complete we can create our Virtual Network Gateway, and connect it to the gateway subnet. At this point we are done with the cloud configuration side and can start the on-prem S2S configuration. 
 
-<h2>Generate PSK</h2>
-
+<h3>Kernel Changes</h3>
 Since I unfortunately do not have any good networking equipment to create the S2S on (came back to bite me later) I decided to host it on a Linux server. For this I will be using strongSwan which is a free open-source S2S tool for Linux.
 
-once the server has booted, we will run these commands to make sure everything is up to date and get strongSwan installed. 
+First we will need to change some parameters that are not defined by default in the Linux kernel. We must enable IPv4 forwarding if we want the S2S to route correctly. We do this by editing the sysctl.conf file and adding the following lines: 
+
+```bash
+net.ipv4.ip_forward = 1 
+net.ipv4.conf.all.accept_redirects = 0 
+net.ipv4.conf.all.send_redirects = 0
+```
+<h2>Initial Setup</h2>
+Now we will run the commands below to install strongSwan and make sure everything is updated. On a new Linux machine, running sudo apt update is a good rule of thumb.
+
 ```bash
 sudo apt update 
 sudo apt install strongswan 
 ```
-Now that we have this installed, we can start the configuration. There are a ton of ways to setup a S2S VPN; Azure uses PSK's for authentication of tunnel endpoints. So we will also need to install OpenSSL to generate a psk: 
+Now that we have it installed, we can start the configuration. There are a ton of ways to setup a S2S VPN such as LDAP, PSK, Certificates, etc. Azure uses PSK's for authentication of tunnel endpoints, so we will also need to install OpenSSL to generate a psk. For simplicities sake I sent the output to a text file. 
 ```bash
 sudo apt install openssl
-
 openssl rand -band64 64 > s2spsk.txt
 ```
 Since I am on mac, I decided to SCP this txt document over to my Mac so I could copy paste the PSK into Azure. If you are a Mac or Linux user you can do the same with the command below: 
 
 ```bash
-scp user@server:/path/to/file 
-
-/path/to/local/destination
+scp user@server:/path/to/file /path/to/local/destination
 ````
-Now that we have the PSK setup, we must configure it in strongSwan's secrets so it can pull it for authentication with Azure. 
+Now that we have the PSK generated, we must configure it in strongSwan's secrets so it can pull it for authentication. 
 ```bash
 #Source      Destination
 72.146.149.25 172.210.81.68 : PSK "87zRQqylaoeF5I8o4lRhwvmUzf+pYdDpsCOlesIeFA/2xrtxKXJTbCPZgqplnXgPX5uprL+aRgxD8ua7MmdWaQ"
@@ -65,7 +70,7 @@ Now that we have this complete, let's configure strongSwan.
 
 <h2>strongSwan</h2>
 
-Like all Linux applications, strongSwan config can be found in /etc/, more specifically /etc/ipsec.conf. We can start to edit this configuration with sudo nano ipsec.conf.
+Like all Linux applications, strongSwan config can be found in /etc/, more specifically /etc/ipsec.conf. We can edit the configuration with "sudo nano /etc/ipsec.conf".
 
 StrongSwan provides a ton of options for us to setup, but this one is quite basic: 
 
@@ -81,11 +86,11 @@ config setup
 conn on-prem-to-azure
 	authby=secret
 	left=%any
-	leftid=76.146.149.125
+	leftid=76.146.149.125 #Left side refers to strongSwan
 	leftsubnet=10.0.0.0/24
-	right=172.210.81.68
+	right=172.210.81.68 #Right side refers to azure
 	rightsubnet=172.16.0.0/24
-	ike=aes256-sha2_256-modp1024!
+	ike=aes256-sha2_256-modp1024! #setting parameters for IKE
 	esp=aes256-sha2_256!
 	keyingtries=0
 	ikelifetime=1h
@@ -96,4 +101,6 @@ conn on-prem-to-azure
 	auto=start
 ```
 
+With this complete, we are good to give it a test. We can start the VPN with the command "sudo ipsec start". To retrieve the connection status, run "sudo ipsec status" or "sudo ipsec statusall" for more details. 
 
+Once connected, we can run a test by attempting to ping a device in Azure with it's private IP address. If everything is networked correctly, we will get ping responses back from the devices in Azure that are connected to the virtual gateway (NOTE: Windows server has ICMP blocked by default in the firewall.). 
