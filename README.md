@@ -54,6 +54,11 @@ scp user@server:/path/to/file
 
 /path/to/local/destination
 ````
+Now that we have the PSK setup, we must configure it in strongSwan's secrets so it can pull it for authentication with Azure. 
+```bash
+#Source      Destination
+72.146.149.25 172.210.81.68 : PSK "87zRQqylaoeF5I8o4lRhwvmUzf+pYdDpsCOlesIeFA/2xrtxKXJTbCPZgqplnXgPX5uprL+aRgxD8ua7MmdWaQ"
+```
 <img src="https://imgur.com/OAR2tIF.png" height="50%" width="50%" alt="Current Topology"/>
 
 Now that we have this complete, let's configure strongSwan.
@@ -78,7 +83,7 @@ conn on-prem-to-azure
 	left=%any
 	leftid=76.146.149.125
 	leftsubnet=10.0.0.0/24
-	right=51.15.44.48
+	right=172.210.81.68
 	rightsubnet=172.16.0.0/24
 	ike=aes256-sha2_256-modp1024!
 	esp=aes256-sha2_256!
