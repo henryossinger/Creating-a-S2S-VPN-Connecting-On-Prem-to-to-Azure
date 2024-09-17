@@ -1,7 +1,4 @@
 # Connecting On-Prem to Azure with a S2S
-
-<img src="https://imgur.com/zhBFu5z.png" height="50%" width="50%" alt="Current Topology"/>
-
 <h2>Technologies Used</h2>
 
 - Ubuntu Server 22.04
