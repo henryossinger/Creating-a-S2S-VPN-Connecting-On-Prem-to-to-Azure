@@ -76,7 +76,7 @@ config setup
 conn on-prem-to-azure
 	authby=secret
 	left=%any
-	leftid=51.15.139.201
+	leftid=76.146.149.125
 	leftsubnet=10.0.0.0/24
 	right=51.15.44.48
 	rightsubnet=172.16.0.0/24
