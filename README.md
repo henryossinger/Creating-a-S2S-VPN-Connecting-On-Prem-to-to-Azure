@@ -82,7 +82,7 @@ config setup
         uniqueids=yes
         strictcrlpolicy=no
 
-# connection to azure datacenter
+# connection to azure
 conn on-prem-to-azure
 	authby=secret
 	left=%any
